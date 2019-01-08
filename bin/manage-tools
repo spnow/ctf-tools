@@ -2,6 +2,9 @@
 set -eu -o pipefail
 # set -x
 
+CTF_TOOLS_ROOT="$(dirname "${BASH_SOURCE[0]}")/.."
+
+
 function usage()
 {
 	cat <<END
@@ -9,19 +12,20 @@ Usage: $(basename $0) [-sv] (list|setup|install|uninstall|bin|search) tool
 
 Where:
     -s      allow running things with sudo (i.e., to install debs)
+    -n      "nice" the installer to reduce background load
     -v      verbose mode. print log while installing
     -f      force certain actions (such as installing over an installed tool)
-    tool    the name of the tool. if "all", does the action on all tools
+    tool    the name of the tool. if "all", does the action on all (installed) tools
 
 Actions:
-    setup       set up the environment (adds ctf-tools/bin to your \$PATH in .bashrc)
-    list        list all tools (-i: only installed, -u: only uninstalled)
-    install     installs a tool
-    uninstall   uninstalls a tool
-    reinstall   reinstalls a tool
-    upgrade     upgrades a tool
-    bin         re-links tool binaries into ctf-tools/bin
-    search      search description and name of tools
+    setup           set up the environment (adds ctf-tools/bin to your \$PATH in .bashrc)
+    list            list all tools (-i: only installed, -u: only uninstalled)
+    install         installs a tool
+    uninstall       uninstalls a tool
+    reinstall       reinstalls a tool
+    upgrade         upgrades a tool (use "all" to do a full upgrade of installed tools)
+    bin             re-links tool binaries into ctf-tools/bin
+    search          search description and name of tools
 
 END
 }
@@ -42,6 +46,8 @@ function detect_distribution()
 		else
 			echo "debian"
 		fi
+	elif which dnf >/dev/null 2>&1; then
+		echo "fedora"
 	else
 		echo ""
 	fi
@@ -50,8 +56,9 @@ function detect_distribution()
 
 function base_build_setup_debian()
 {
-	PACKAGE_REQS="build-essential libtool g++ gcc texinfo curl wget automake autoconf python python-dev git subversion unzip virtualenvwrapper"
+	PACKAGE_REQS="build-essential libtool g++ gcc texinfo curl wget automake autoconf python python-dev git subversion unzip virtualenvwrapper lsb-release"
 	PACKAGE_COUNT=$(echo $PACKAGE_REQS | tr ' ' '\n' | wc -l)
+	sudo apt-get update
 	if [ $(dpkg -l $PACKAGE_REQS | grep "^ii" | wc -l) -ne $PACKAGE_COUNT ]
 	then
 		if [ "$ALLOW_SUDO" -eq 1 ]; then
@@ -110,6 +117,19 @@ EOF
 }
 
 
+function base_build_setup_fedora()
+{
+	PACKAGE_REQS="libtool gcc gcc-c++ clang cmake texinfo curl wget automake autoconf python python-devel git subversion unzip python-virtualenvwrapper redhat-rpm-config"
+	if [ "$ALLOW_SUDO" -eq 1 ]; then
+		sudo dnf -y install $PACKAGE_REQS
+	else
+		TOOL=SETUP tool_log "Please install the following packages: $PACKAGE_REQS"
+	fi
+
+	# TODO: check whether we have to explicitly enable i386 package support
+}
+
+
 function base_build_setup()
 {
 	case "$1" in
@@ -122,21 +142,38 @@ function base_build_setup()
 			base_build_setup_arch
 			export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
 			;;
+		"fedora")
+			base_build_setup_fedora
+			;;
 		*)
 			TOOL=SETUP tool_log "Cannot detect or unsupported distribution"
 	esac
 
 	## setup PATH for several shells
 
-	echo "export PATH=\"$PWD/bin:\$PATH\"" >> ~/.bashrc
+	MAGIC="# ctf-tools: PATH setup"
+	# make sure at least bashrc exists in case of plain VM setup
+	touch ~/.bashrc
 
-	if [ -e ~/.zshrc ]
-	then
-		echo "export PATH=\"$PWD/bin:\$PATH\"" >> ~/.zshrc
-	fi
+	for f in ~/.bashrc ~/.zshrc; do
+		if [[ -e "$f" ]]; then
+			if ! grep "$MAGIC" "$f" >/dev/null 2>&1; then
+				cat >> "$f" << EOF
+$MAGIC
+export PATH=$PWD/bin:\$PATH
+EOF
+			fi
+		fi
+	done
 
-	if [ -e ~/.config/fish/config.fish ]; then
-		echo "set -x PATH $PWD/bin \$PATH " >> ~/.config/fish/config.fish
+	f=~/.config/fish/config.fish
+	if [[ -e "$f" ]]; then
+		if ! grep "$MAGIC" "$f" >/dev/null 2>&1; then
+			cat >> "$f" << EOF
+$MAGIC
+set -x PATH $PWD/bin \$PATH
+EOF
+		fi
 	fi
 
 	if [[ ! -e "$PWD/bin/ctf-tools-pip3" ]]; then
@@ -148,6 +185,53 @@ function base_build_setup()
 
 	# create the py3 virtualenv
 	"$PWD/bin/ctf-tools-pip3" freeze 2>&1 >/dev/null
+}
+
+
+function is_tool_installed() {
+	git status --ignored "$1" | egrep -q 'Untracked|Ignored'
+}
+
+
+function full_upgrade() {
+	TOOL="FULL-UPGRADE" tool_log "Upgrading all installed tools!"
+	succ=0
+	fail=0
+	declare -a failed
+	installed=$($0 list -i)
+	TOOL="FULL-UPGRADE" tool_log "Upgrading tools: $installed"
+	for t in $installed
+	do
+		TOOL="FULL-UPGRADE" tool_log "Upgrading tool $t"
+		if $0 upgrade $t; then
+			succ=$((succ+1))
+		else
+			fail=$((fail+1))
+			failed[${#failed[@]}]="$t"
+		fi
+	done
+	TOOL="FULL-UPGRADE" tool_log "failed to upgrade ${failed[@]}"
+	TOOL="FULL-UPGRADE" tool_log "tool full-upgrade stats - sucess=$succ failed=$fail"
+}
+
+function verify_tool_sanity() {
+	if [[ -z "$TOOL" ]]; then
+		TOOL="$ACTION" tool_log "must provide at least one tool for $ACTION"
+		usage
+		exit 1
+	fi
+
+	if [[ "$TOOL" == "all" ]]; then
+		TOOL="$ACTION" tool_log "can't handle \"all\" magic tool directly!" \
+			"This is probably a bug you should report."
+		usage
+		exit 1
+	fi
+
+	if [[ ! -d "$CTF_TOOLS_ROOT/$TOOL" ]]; then
+		TOOL="$ACTION" tool_log "invalid tool $TOOL"
+		exit 1
+	fi
 }
 
 
@@ -163,6 +247,9 @@ do
 	case $1 in
 		-s)
 			export ALLOW_SUDO=1
+			;;
+		-n)
+			export NICE_LEVEL=10
 			;;
 		-f)
 			export FORCE=1
@@ -181,6 +268,8 @@ done
 [[ -z ${ALLOW_SUDO+x} ]] && export ALLOW_SUDO=0
 [[ -z ${FORCE+x} ]] && export FORCE=0
 [[ -z ${VERBOSE_OUTPUT+x} ]] && export VERBOSE_OUTPUT=0
+[[ -z ${NICE_LEVEL+x} ]] && export NICE_LEVEL=0
+export EXPECTFAIL=${EXPECTFAIL:-0}
 
 if [[ $# -ge 1 ]]; then
 	ACTION="$1"
@@ -191,17 +280,37 @@ else
 	TOOL=""
 fi
 
-if [ "$TOOL" == "all" ]
+# handle the special all tool
+if [[ "$TOOL" == "all" ]]
 then
-	for t in $($0 list)
-	do
-		$0 $ACTION $t
-	done
-elif [ -z "$TOOL" -a "$ACTION" != "list" -a "$ACTION" != "setup" ]
-then
-	usage
-	exit
+	case $ACTION in
+		install)
+			for t in $($0 list)
+			do
+				$0 $ACTION $t
+			done
+			exit 0
+			;;
+		bin | uninstall | reinstall)
+			for t in $($0 list -i)
+			do
+				$0 $ACTION $t
+			done
+			exit 0
+			;;
+		upgrade)
+			full_upgrade
+			exit 0
+			;;
+		*)
+			TOOL="" tool_log "action $ACTION cannot handle the special \"all\" tool"
+			usage
+			exit 1
+			;;
+	esac
 fi
+
+
 
 cd $(dirname "${BASH_SOURCE[0]}")/..
 
@@ -214,10 +323,24 @@ case $ACTION in
 		for t in *
 		do
 			[ ! -e "$t/install" ] && continue
-			echo $t
+
+			if [[ "${2:-}" == "" ]]; then
+				echo "$t"
+			else
+				if is_tool_installed "$t"; then
+					if [[ "$2" == "-i" ]]; then
+						echo "$t"
+					fi
+				else
+					if [[ "$2" == "-u" ]]; then
+						echo "$t"
+					fi
+				fi
+			fi
 		done
 		;;
 	bin)
+		verify_tool_sanity
 		cd bin
 		if [ -d ../$TOOL/bin ]; then
 			ln -sf ../$TOOL/bin/* .
@@ -226,11 +349,19 @@ case $ACTION in
 		cd ..
 		;;
 	install)
+		verify_tool_sanity
 		cd $TOOL
-		if [ "$FORCE" -eq 0 ] && git status --ignored . | egrep -q 'Untracked|Ignored'
+		if [ "$FORCE" -eq 0 ] && is_tool_installed "."
 		then
 			tool_log "appears to already be installed. Uninstall first?"
 			exit 0
+		fi
+
+		# the first line in all install and uninstall scripts should have the -e flag, otherwise fail
+		if [ $(for i in install* uninstall test; do if [ -e "$i" ]; then head -1 "$i"; fi; done | sort | uniq | grep -v '^#!/bin/bash -ex$' | wc -l) -ne 0 ];
+		then
+			tool_log "not all install/uninstall/test scripts start with '#!/bin/bash -ex', which is a must for accurate testing."
+			exit 1
 		fi
 
 		tool_log "starting install, logging to $PWD/install.log"
@@ -248,9 +379,19 @@ case $ACTION in
 				INSTALL_ROOT_SCRIPT="./install-root-debian"
 			fi
 			if [[ -x "$INSTALL_ROOT_SCRIPT" && "$ALLOW_SUDO" -eq 1 ]]; then
-				if ! sudo env DISTRI=$DISTRI "$INSTALL_ROOT_SCRIPT" >> install.log 2>&1;
-				then
-					tool_log "INSTALL FAILED"
+				set +e
+				if [[ "$VERBOSE_OUTPUT" -eq 1 ]]; then
+					sudo env DISTRI=$DISTRI "$INSTALL_ROOT_SCRIPT" 2>&1 | tee -a install.log
+				else
+					sudo env DISTRI=$DISTRI "$INSTALL_ROOT_SCRIPT" >> install.log 2>&1
+				fi
+				INSTALL_FAILED=$?
+				set -e
+
+				if [[ "$INSTALL_FAILED" -eq 0 ]]; then
+					tool_log "system dependencies installed"
+				else
+					tool_log "INSTALL FAILED: $INSTALL_ROOT_SCRIPT failed to install dependencies"
 					cat install.log >&2
 					exit 1
 				fi
@@ -262,9 +403,9 @@ case $ACTION in
 		# execute install script
 		set +e
 		if [ "$VERBOSE_OUTPUT" -eq 1 ]; then
-			DISTRI=$DISTRI ./install 2>&1 | tee -a install.log
+			DISTRI=$DISTRI PATH=$CTF_TOOLS_ROOT/bin/:$PATH nice -n$NICE_LEVEL ./install 2>&1 | tee -a install.log
 		else
-			DISTRI=$DISTRI ./install >>install.log 2>&1
+			DISTRI=$DISTRI PATH=$CTF_TOOLS_ROOT/bin/:$PATH nice -n$NICE_LEVEL ./install >>install.log 2>&1
 		fi
 		INSTALL_FAILED=$?
 		set -e
@@ -281,6 +422,7 @@ case $ACTION in
 		$0 bin $TOOL
 		;;
 	uninstall)
+		verify_tool_sanity
 		cd $TOOL
 
 		tool_log "starting uninstall, logging to $PWD/uninstall.log"
@@ -291,6 +433,11 @@ case $ACTION in
 		cd ..
 		;;
 	upgrade)
+		if [[ "$TOOL" == "" ]]; then
+			full_upgrade
+			exit 0
+		fi
+		verify_tool_sanity
 		cd $TOOL
 		if [ -x ./upgrade ]
 		then
@@ -313,10 +460,12 @@ case $ACTION in
 		if [ "$FORCE" -eq 0 ] && ! cat README.md | grep "<\!--tool-->" | grep "| \[$TOOL\](" | grep -q -- "--test--"
 		then
 			tool_log "Tests not enabled."
+			if [ "$EXPECTFAIL" -eq "1" ]; then exit 1; fi
 		else
-			$0 install $TOOL
+			if (
+			if ! $0 install $TOOL; then exit 1; fi
 
-			cd $TOOL
+			cd $TOOL || exit 1
 			if [ -f ./test ]
 			then
 				tool_log "Running test script."
@@ -329,9 +478,18 @@ case $ACTION in
 			else
 				tool_log "Install succeeded. No test script!"
 			fi
+			exit 0
+			); 
+			then
+				if [ "$EXPECTFAIL" -eq "1" ]; then exit 1; else exit 0; fi
+			else
+				if [ "$EXPECTFAIL" -eq "1" ]; then exit 0; else exit 1; fi
+			fi
 		fi
 		;;
 	*)
 		echo "TOOLS | ERROR | unknown action $ACTION"
+		usage
+		exit 1
 		;;
 esac

@@ -4,6 +4,7 @@
 
 This is a collection of setup scripts to create an install of various security research tools.
 Of course, this isn't a hard problem, but it's really nice to have them in one place that's easily deployable to new machines and so forth.
+The install-scripts for these tools are checked regularly, the results can be found on [the build status page](_buildstatus/index.md).
 
 Installers for the following tools are included:
 
@@ -21,9 +22,12 @@ Installers for the following tools are included:
 | binary | [elfparser](http://www.elfparser.com/) | Quickly determine the capabilities of an ELF binary through static analysis. | <!--tool--><!--test-->
 | binary | [evilize](http://www.mathstat.dal.ca/~selinger/md5collision/) | Tool to create MD5 colliding binaries | <!--tool--><!--test-->
 | binary | [gdb](http://www.gnu.org/software/gdb/) | Up-to-date gdb with python2 bindings. | <!--tool--><!--failing-->
+| binary | [gdb-heap](https://github.com/rogerhu/gdb-heap) | gdb extension for debugging heap issues. | <!--tool--><!--test-->
 | binary | [gef](https://github.com/hugsy/gef) | Enhanced environment for gdb. | <!--tool--><!--no-test-->
 | binary | [hongfuzz](https://github.com/google/honggfuzz) | A general-purpose, easy-to-use fuzzer with interesting analysis options. | <!--tool--><!--test-->
 | binary | [libheap](https://github.com/cloudburst/libheap) | gdb python library for examining the glibc heap (ptmalloc) | <!--tool--><!--no-test-->
+| binary | [miasm](https://github.com/cea-sec/miasm) | Reverse engineering framework in Python. | <!--tool--> <!--test-->
+| binary | [one_gadget](https://github.com/david942j/one_gadget) | Magic gadget search for libc. | <!--tool--> <!--test-->
 | binary | [panda](https://github.com/moyix/panda) | Platform for Architecture-Neutral Dynamic Analysis. | <!--tool--><!--no-test-->
 | binary | [pathgrind](https://github.com/codelion/pathgrind) | Path-based, symbolically-assisted fuzzer. | <!--tool--><!--failing-->
 | binary | [peda](https://github.com/longld/peda) | Enhanced environment for gdb. | <!--tool--><!--test-->
@@ -34,16 +38,23 @@ Installers for the following tools are included:
 | binary | [qemu](http://qemu.org) | Latest version of qemu! | <!--tool--><!--times-out-->
 | binary | [qira](http://qira.me) | Parallel, timeless debugger. | <!--tool--><!--times-out-->
 | binary | [radare2](http://www.radare.org/) | Some crazy thing crowell likes. | <!--tool--><!--test-->
+| binary | [rappel](https://github.com/yrp604/rappel) | A linux-based assembly REPL. | <!--tool--><!--test-->
 | binary | [ropper](https://github.com/sashs/Ropper) | Another gadget finder. | <!--tool--><!--test-->
 | binary | [rp++](https://github.com/0vercl0k/rp) | Another gadget finder. | <!--tool--><!--test-->
+| binary | [rr](http://rr-project.org) | Record and Replay Debugging Framework | <!--tool--><!--test-->
+| binary | [scratchabit](https://github.com/pfalcon/ScratchABit) | Easily retargetable and hackable interactive disassembler | <!--tool--><!--test-->
+| binary | [scratchablock](https://github.com/pfalcon/ScratchABlock) | Yet another crippled decompiler project | <!--tool--><!--test-->
+| binary | [seccomp-tools](https://github.com/david942j/seccomp-tools) | Provides powerful tools for seccomp analysis | <!--tool--><!--test-->
 | binary | [shellnoob](https://github.com/reyammer/shellnoob) | Shellcode writing helper. | <!--tool--><!--test-->
 | binary | [shellsploit](https://github.com/b3mb4m/shellsploit-framework) | Shellcode development kit. | <!--tool--><!--test-->
 | binary | [snowman](https://github.com/yegord/snowman) | Cross-architecture decompiler. | <!--tool--><!--test-->
-| binary | [taintgrind](https://github.com/wmkhoo/taintgrind) | A valgrind taint analysis tool. | <!--tool--><!--test-->
+| binary | [taintgrind](https://github.com/wmkhoo/taintgrind) | A valgrind taint analysis tool. | <!--tool--><!--failing-->
+| binary | [valgrind](http://valgrind.org) | A Dynamic Binary Instrumentation framwork with some built-in tools. | <!--tool--><!--test-->
 | binary | [villoc](https://github.com/wapiflapi/villoc) | Visualization of heap operations. | <!--tool--><!--test-->
 | binary | [virtualsocket](https://github.com/antoniobianchi333/virtualsocket) | A nice library to interact with binaries. | <!--tool--><!--test-->
 | binary | [wcc](https://github.com/endrazine/wcc) |  The Witchcraft Compiler Collection is a collection of compilation tools to perform binary black magic on the GNU/Linux and other POSIX platforms. | <!--tool--><!--no-test-->
 | binary | [xrop](https://github.com/acama/xrop) | Gadget finder. | <!--tool--><!--failing-->
+| binary | [manticore](https://github.com/trailofbits/manticore) | Manticore is a prototyping tool for dynamic binary analysis, with support for symbolic execution, taint analysis, and binary instrumentation. | <!--tool--><!--no-test-->
 | forensics | [binwalk](https://github.com/devttys0/binwalk.git) | Firmware (and arbitrary file) analysis tool. | <!--tool--><!--test-->
 | forensics | [dislocker](http://www.hsc.fr/ressources/outils/dislocker/) | Tool for reading Bitlocker encrypted partitions. | <!--tool--><!--test-->
 | forensics | [exetractor](https://github.com/kholia/exetractor-clone) | Unpacker for packed Python executables. Supports PyInstaller and py2exe. | <!--tool--><!--test-->
@@ -53,14 +64,18 @@ Installers for the following tools are included:
 | forensics | [scrdec](https://gist.github.com/bcse/1834878) | A decoder for encoded Windows Scripts. | <!--tool--><!--test-->
 | forensics | [testdisk](http://www.cgsecurity.org/wiki/TestDisk) | Testdisk and photorec for file recovery. | <!--tool--><!--test-->
 | crypto | [cribdrag](https://github.com/SpiderLabs/cribdrag) | Interactive crib dragging tool (for crypto). | <!--tool--><!--test-->
+| crypto | [fastcoll](https://www.win.tue.nl/hashclash/) | An md5sum collision generator. | <!--tool--><!--test-->
 | crypto | [foresight](https://github.com/ALSchwalm/foresight) | A tool for predicting the output of random number generators. To run, launch "foresee". | <!--tool--><!--test-->
 | crypto | [featherduster](https://github.com/nccgroup/featherduster) |  An automated, modular cryptanalysis tool. | <!--tool--><!--no-test-->
+| crypto | [galois](http://web.eecs.utk.edu/~plank/plank/papers/CS-07-593) | A fast galois field arithmetic library/toolkit. | <!--tool--><!--test-->
 | crypto | [hashkill](https://github.com/gat3way/hashkill) | Hash cracker. | <!--tool--><!--test-->
 | crypto | [hashpump](https://github.com/bwall/HashPump) | A tool for performing hash length extension attaacks. | <!--tool--><!--test-->
 | crypto | [hashpump-partialhash](https://github.com/mheistermann/HashPump-partialhash) | Hashpump, supporting partially-unknown hashes. | <!--tool--><!--test-->
 | crypto | [hash-identifier](https://code.google.com/p/hash-identifier/source/checkout) | Simple hash algorithm identifier. | <!--tool--><!--test-->
+| crypto | [libc-database](https://github.com/niklasb/libc-database) | Build a database of libc offsets to simplify exploitation. | <!--tool--><!--test-->
 | crypto | [littleblackbox](https://github.com/devttys0/littleblackbox) | Database of private SSL/SSH keys for embedded devices. | <!--tool--><!--test-->
 | crypto | [msieve](http://sourceforge.net/projects/msieve/) | Msieve is a C library implementing a suite of algorithms to factor large integers. | <!--tool--><!--test-->
+| crypto | [nonce-disrespect](https://github.com/nonce-disrespect/nonce-disrespect) | Nonce-Disrespecting Adversaries: Practical Forgery Attacks on GCM in TLS. | <!--tool--><!--test-->
 | crypto | [pemcrack](https://github.com/robertdavidgraham/pemcrack) | SSL PEM file cracker. | <!--tool--><!--test-->
 | crypto | [pkcrack](https://www.unix-ag.uni-kl.de/~conrad/krypto/pkcrack.html) | PkZip encryption cracker. | <!--tool--><!--test-->
 | crypto | [python-paddingoracle](https://github.com/mwielgoszewski/python-paddingoracle) | Padding oracle attack automation. | <!--tool--><!--test-->
@@ -80,18 +95,24 @@ Installers for the following tools are included:
 | stego | [steganabara](http://www.caesum.com/handbook/stego.htm) | Another image steganography solver. | <!--tool--><!--test-->
 | stego | [stegdetect](http://www.outguess.org/) | Steganography detection/breaking tool. | <!--tool--><!--test-->
 | stego | [stegsolve](http://www.caesum.com/handbook/stego.htm) | Image steganography solver. | <!--tool--><!--test-->
+| stego | [zsteg](https://github.com/zed-0xff/zsteg) | detect stegano-hidden data in PNG & BMP. | <!--tool--><!--no-test-->
 | android | [apktool](https://ibotpeaches.github.io/Apktool/) | Dissect, dis-assemble, and re-pack Android APKs | <!--tool--><!--test-->
 | android | [android-sdk](http://developer.android.com/sdk) | The android SDK (adb, emulator, etc). | <!--tool--><!--no-test-->
+| misc | [xspy](http://git.kali.org/gitweb/?p=packages/xspy.git;a=summary) | Tiny tool to spy on X sessions. | <!--tool--><!--test-->
 | misc | [z3](https://github.com/Z3Prover/z3) | Theorem prover from Microsoft Research. | <!--tool--><!--times-out-->
 | misc | [jdgui](http://jd.benow.ca/) | Java decompiler. | <!--tool--><!--test-->
+| misc | [veles](https://codisec.com/veles/) | Binary data analysis and visulalization tool. | <!--tool--><!--test-->
+| misc | [youtube-dl](https://yt-dl.org/) | Latest version of the popular youtube downloader. | <!--tool--><!--test-->
 
 There are also a couple of installers for useful libraries included. Currently
 only the python bindings for these libraries are installed.
 
 | Category | Library | Description |
+|----------|---------|-------------|
 | binary | [capstone](http://www.capstone-engine.org) | Multi-architecture disassembly framework. | <!--tool--><!--test-->
 | binary | [keystone](http://www.keystone-engine.org) | Lightweight multi-architecture assembler framework. | <!--tool--><!--test-->
 | binary | [unicorn](http://www.unicorn-engine.org) | Multi-architecture CPU emulator framework. | <!--tool--><!--test-->
+| binary | [lief](https://lief.quarkslab.com/) | Library to Instrument Executable Formats. | <!--tool--><!--test-->
 
 There are also some installers for non-CTF stuff to break the monotony!
 
@@ -118,6 +139,9 @@ manage-tools -s install gdb
 
 # install pwntools, but don't let it sudo install dependencies
 manage-tools install pwntools
+
+# install qemu, but use "nice" to avoid degrading performance during compilation
+manage-tools -n install qemu
 
 # uninstall gdb
 manage-tools uninstall gdb
@@ -148,6 +172,7 @@ You can build a docker image with:
 
 ```bash
 git clone https://github.com/zardus/ctf-tools
+cd ctf-tools
 docker build -t ctf-tools .
 ```
 
@@ -171,6 +196,7 @@ You can build a Vagrant VM with:
 
 ```bash
 wget https://raw.githubusercontent.com/zardus/ctf-tools/master/Vagrantfile
+vagrant plugin install vagrant-vbguest
 vagrant up
 ```
 
@@ -227,6 +253,7 @@ They're not included in ctf-tools, but are included here as notes for the author
 |----------|---------|-------------|---------|
 | forensics | [foremost](http://foremost.sourceforge.net/) | File carver. | `foremost` | <!--deb-tool-->
 | dsniff | [dsniff](http://www.monkey.org/~dugsong/dsniff/) | Grabs passwords and other data from pcaps/network streams. | dsniff | <!--deb-tool-->
+| stego | [pngtools](https://launchpad.net/ubuntu/+source/pngtools) | PNG's analysis tool. | <!--deb-tool-->
 
 ## Tools with unofficial Debian/Ubuntu repos or debs
 
